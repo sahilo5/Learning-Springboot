@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login & Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding-top: 50px;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 10px;
+            color: green;
+        }
+
+        .error {
+            text-align: center;
+            margin-top: 10px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Login</h2>
+    <input type="text" id="login-username" placeholder="Username" />
+    <input type="password" id="login-password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <div id="login-message"></div>
+
+    <h2>Register</h2>
+    <input type="text" id="register-username" placeholder="Username" />
+    <input type="password" id="register-password" placeholder="Password" />
+    <button onclick="register()">Register</button>
+    <div id="register-message"></div>
+
+    <button onclick="callUserHealth()">Check User Health</button>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080/api/auth';
+
+    async function login() {
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        const response = await fetch(`${API_BASE}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+        const msg = document.getElementById('login-message');
+
+        if (response.ok) {
+            const token = data.accessToken;
+            localStorage.setItem('jwt', token); // Store token
+            msg.textContent = 'Login successful!';
+            msg.className = 'message';
+        } else {
+            msg.textContent = data.message || 'Login failed';
+            msg.className = 'error';
+        }
+    }
+
+    async function register() {
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+
+        const response = await fetch(`${API_BASE}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+        const msg = document.getElementById('register-message');
+
+        if (response.ok) {
+            msg.textContent = 'Registration successful!';
+            msg.className = 'message';
+        } else {
+            msg.textContent = data.message || 'Registration failed';
+            msg.className = 'error';
+        }
+    }
+
+    async function callUserHealth() {
+        const token = localStorage.getItem('jwt');
+        if (!token) {
+            alert('Please login first.');
+            return;
+        }
+
+        const response = await fetch('http://localhost:8080/user/health', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+
+        const result = await response.text();
+        if (response.ok) {
+            alert('Health check success: ' + result);
+        } else {
+            alert('Health check failed: ' + result);
+        }
+    }
+</script>
+</body>
+</html>
